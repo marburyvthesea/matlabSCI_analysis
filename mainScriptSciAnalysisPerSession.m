@@ -79,48 +79,12 @@ matObjOutAggregatedDistances = aggregateShuffledDistances(dir_path, session, num
 %% compute CDF on aggregated shuffled data
 matObjCDF = getCDFsShuffledData(dir_path, session, numFrames);
 
-%%
-% Initialize a cell array to hold the aggregated distances for each frame
-aggregatedShuffledCDFs = cell(1, numFrames);
-%aggregatedShuffledCDFsStored = cell(1, numFrames);
-% Open files to store the data
-cdfFile = strcat(dir_path, session, '_aggregated_cdfs_shuffled.mat');
-% Write CDF data to file after each frame
-save(cdfFile, 'aggregatedShuffledCDFs', '-v7.3');
-% Use matfile to modify the .mat file incrementally
-matObjCDFOut = matfile(cdfFile, 'Writable', true);
-% Load the file with distances as a matfile object without loading the data into memory
-matObj = matfile(strcat(dir_path, session, '_aggregated_distances_shuffled.mat'));
-
-%%
-tic
-% Aggregate active cell distances for each frame across all shuffles
-for frameIdx = 1:10
-    if mod(frameIdx,100)==0
-        disp(frameIdx);
-    end
-    aggregatedFrameDistancesCell = matObj.aggregatedDistances(1, frameIdx);
-    aggregatedFrameDistances=aggregatedFrameDistancesCell{1}; 
-    if ~isempty(aggregatedFrameDistances)
-        [f, x] = ecdf(aggregatedFrameDistances);
-        % Write CDF data to file after each frame 
-        cdfData = {x, f};
-    else 
-        % Assign empty CDF data
-        cdfData = {0, 0};
-    end
-    % Store the CDF data in both memory and the .mat file
-    %aggregatedShuffledCDFsStored{frameIdx} = cdfData;  % Store in memory
-    matObjCDFOut.aggregatedShuffledCDFsOut(1, frameIdx) = {cdfData};  % Save to the .mat file
-end
-toc
-
 %% Calculate SCI 
 
 perFrameSCI=zeros(1, numFrames);
 
 %aggregatedShuffledCDFs=aggregatedShuffledCDFsStored;
-aggregatedShuffledCDFs = matObjCDF.aggregatedShuffledCDFs;
+aggregatedShuffledCDFs = matObjCDF.aggregatedShuffledCDFsOut;
 
 for frameIdx=1:numFrames 
     % Perform a one-tailed Kolmogorov–Smirnov test to see if frameDistances1
