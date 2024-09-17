@@ -1,0 +1,181 @@
+
+
+%
+framesToAnalyzeTrimmed  = within_frames_to_analyze_trimmed;
+%                    = cellXYcoords;
+%                    = numCells;
+%                    = cellDistances;
+%                    = numBins;
+%                    = binVector;
+%                    = 1;
+
+paddedSignalPeaksFramesToAnalyze = paddedSignalPeaks(:, framesToAnalyzeTrimmed);
+
+nComparisons = length(cellDistances);%just to keep track of the number of cell-cell comparisons
+
+%% calculate Jaccards per frame on actual data
+% calculate Jaccards per frame on actual data
+perFrameJaccard = zeros(nComparisons, length(framesToAnalyzeTrimmed));
+actualDataActiveCellDistances = table();
+for i=1:length(framesToAnalyzeTrimmed)
+    thisFrame_PaddedSignalPeaks = paddedSignalPeaksFramesToAnalyze(:, i);
+    CellJaccards = 1-pdist(thisFrame_PaddedSignalPeaks,'jaccard');
+    activeCellDistances = cellDistances(CellJaccards == 1);
+    columnName = ['frameIdx', num2str(i)];
+    actualDataActiveCellDistances.(columnName)=activeCellDistances; 
+    perFrameJaccard(:, 1)=CellJaccards;
+end
+
+%% compute Jaccards for shuffled data
+
+% Preallocate a cell array to store 1000 shuffled tables
+allShuffledData = cell(1, 1000);
+tic;
+parfor shuffle=1:10
+    
+    % Initialize table with the number of columns known
+    columnNames = arrayfun(@(x) ['frameIdx', num2str(x)], 1:length(framesToAnalyzeTrimmed), 'UniformOutput', false);
+    thisShuffleDataActiveCellDistances = array2table(cell(1, length(framesToAnalyzeTrimmed)), 'VariableNames', ...
+    arrayfun(@(x) ['frameIdx', num2str(x)], 1:length(framesToAnalyzeTrimmed), 'UniformOutput', false));
+    
+    %do shuffle on cell coordinates 
+    thisShuffleIndicies = randperm(size(XY_coords_array, 1));
+    thisShuffleXY_coords_array = XY_coords_array(thisShuffleIndicies,:); 
+    thisShuffleCellDistances = pdist(thisShuffleXY_coords_array, 'euclidean')*micronsPerPixel;
+   
+    for i=1:length(framesToAnalyzeTrimmed)
+        thisFrame_PaddedSignalPeaks = paddedSignalPeaksFramesToAnalyze(:, i);
+        CellJaccardsThisFrame  = 1-pdist(thisFrame_PaddedSignalPeaks,'jaccard');
+        % get distances between active cells, from independently shuffled data set, for the active cells in this frame 
+        activeCellDistances = thisShuffleCellDistances(CellJaccardsThisFrame == 1);
+        % Assign to table
+        thisShuffleDataActiveCellDistances{1, i} = {activeCellDistances};
+    end
+
+    allShuffledData{shuffle} = thisShuffleDataActiveCellDistances;
+
+end
+
+elapsedTime = toc;
+% Measure end time and display elapsed time
+
+disp(['Elapsed time: ', num2str(elapsedTime), ' seconds']);
+%% single shuffle example 
+%
+allShuffledData = cell(1, 1000);
+shuffle=1;
+perFrameJaccardThisShuffle = zeros(nComparisons, length(framesToAnalyzeTrimmed));
+thisShuffleDataActiveCellDistances = table();
+for i=1:length(framesToAnalyzeTrimmed)
+    thisFrame_PaddedSignalPeaks = paddedSignalPeaksFramesToAnalyze(:, i);
+    CellJaccards = 1-pdist(thisFrame_PaddedSignalPeaks,'jaccard');
+    %do shuffle on cell coordinates 
+    thisShuffleIndicies = randperm(size(XY_coords_array, 1));
+    thisShuffleXY_coords_array = XY_coords_array(thisShuffleIndicies,:); 
+    thisShuffleCellDistances = pdist(thisShuffleXY_coords_array, 'euclidean')*micronsPerPixel;
+    activeCellDistances = thisShuffleCellDistances(CellJaccards == 1);
+    columnName = ['frameIdx', num2str(i)];
+    thisShuffleDataActiveCellDistances.(columnName)=activeCellDistances; 
+    perFrameJaccardThisShuffle(:, 1)=CellJaccards;
+end
+allShuffledData{shuffle} = thisShuffleDataActiveCellDistances;
+
+%% pdist on full matrix - 821.2689 seconds per 1000 frames 
+
+% Preallocate a cell array to store 1000 shuffled tables
+allShuffledData = cell(1, 1000);
+
+tic;
+
+parfor shuffle=1:1000
+    
+    % Initialize table with the number of columns known
+    columnNames = arrayfun(@(x) ['frameIdx', num2str(x)], 1:length(framesToAnalyzeTrimmed), 'UniformOutput', false);
+    thisShuffleDataActiveCellDistances = array2table(cell(1, length(framesToAnalyzeTrimmed)), 'VariableNames', ...
+    arrayfun(@(x) ['frameIdx', num2str(x)], 1:length(framesToAnalyzeTrimmed), 'UniformOutput', false));
+    
+    %do shuffle on cell coordinates 
+    thisShuffleIndicies = randperm(size(XY_coords_array, 1));
+    thisShuffleXY_coords_array = XY_coords_array(thisShuffleIndicies,:); 
+    thisShuffleCellDistances = pdist(thisShuffleXY_coords_array, 'euclidean')*micronsPerPixel;
+    
+    % Calculate pairwise Jaccard distances for the entire matrix
+    CellJaccardsFull = 1 - pdist(paddedSignalPeaksFramesToAnalyze', 'jaccard');
+    % Reshape CellJaccardsFull into a square matrix form
+    CellJaccardsMatrix = squareform(CellJaccardsFull); % Converts to square matrix
+
+    for i=1:length(framesToAnalyzeTrimmed)
+        %thisFrame_PaddedSignalPeaks = paddedSignalPeaksFramesToAnalyze(:, i);
+        %CellJaccards = 1-pdist(thisFrame_PaddedSignalPeaks,'jaccard');
+        CellJaccardsThisFrame = CellJaccardsMatrix(:, i);  % distances for frame i
+        % get distances between active cells, from independently shuffled data set, for the active cells in this frame 
+        activeCellDistances = thisShuffleCellDistances(CellJaccardsThisFrame == 1);
+        % Assign to table
+        thisShuffleDataActiveCellDistances{1, i} = {activeCellDistances};
+    end
+
+    allShuffledData{shuffle} = thisShuffleDataActiveCellDistances;
+
+end
+
+elapsedTime = toc;
+% Measure end time and display elapsed time
+
+disp(['Elapsed time: ', num2str(elapsedTime), ' seconds']);
+
+
+
+%% trying to use a progress bar
+% Total number of shuffles
+totalShuffles = 20;
+allShuffledData = cell(1, 1000);
+
+% Create a DataQueue to monitor progress
+D = parallel.pool.DataQueue;
+afterEach(D, @nUpdateWaitbar);  % Update the waitbar after each iteration
+
+% Create a waitbar
+hWaitBar = waitbar(0, 'Starting...');
+
+%nComparisons = 1000; % Example comparison count
+% Initialize progress counter
+progress = 0;
+% Monitor progress in parallel using a handle to the external function
+afterEach(D, @(x) nUpdateWaitbar(x, hWaitBar, progress, totalShuffles));
+
+parfor shuffle = 1:totalShuffles
+    % Initialize table with the number of columns known
+    columnNames = arrayfun(@(x) ['frameIdx', num2str(x)], 1:length(framesToAnalyzeTrimmed), 'UniformOutput', false);
+    thisShuffleDataActiveCellDistances = array2table(cell(1, length(framesToAnalyzeTrimmed)), 'VariableNames', columnNames);
+    
+    % Do shuffle on cell coordinates
+    thisShuffleIndicies = randperm(size(XY_coords_array, 1));
+    thisShuffleXY_coords_array = XY_coords_array(thisShuffleIndicies, :); 
+    thisShuffleCellDistances = pdist(thisShuffleXY_coords_array, 'euclidean') * micronsPerPixel;
+
+    for i = 1:length(framesToAnalyzeTrimmed)
+        thisFrame_PaddedSignalPeaks = paddedSignalPeaksFramesToAnalyze(:, i);
+        CellJaccards = 1 - pdist(thisFrame_PaddedSignalPeaks, 'jaccard');
+        
+        % Get distances between active cells from the shuffled data set
+        activeCellDistances = thisShuffleCellDistances(CellJaccards == 1);
+        
+        % Assign to table
+        thisShuffleDataActiveCellDistances{1, i} = {activeCellDistances};
+    end
+    
+    % Store the result for this shuffle
+    allShuffledData{shuffle} = thisShuffleDataActiveCellDistances;
+    
+    % Send progress update
+    send(D, shuffle);
+end
+% Close waitbar after completion
+delete(hWaitBar);
+
+
+
+
+
+
+
