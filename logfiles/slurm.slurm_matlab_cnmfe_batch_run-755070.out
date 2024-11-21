@@ -1,0 +1,16 @@
+/scratch/jma819/CNMFE_filesForClusteringAnalysis/introFigure/
+MATLAB is selecting SOFTWARE OPENGL rendering.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2023 The MathWorks, Inc.
+             R2023b Update 7 (23.2.0.2515942) 64-bit (glnxa64)
+                              January 30, 2024
+
+ 
+To get started, type doc.
+For product information, visit www.mathworks.com.
+ 
+ exit;addpath(genpath('spatial_clustering'));dir_path=/scratch/jma819/CNMFE_filesForClusteringAnalysis/introFigure/;session=DIO_r2_19_14_52_25;save_path=/scratch/jma819/CNMFE_filesForClusteringAnalysis/analysisOutput/;micronsPerPixel=1.85;disp(dir_path);disp(session);disp(save_path);mainScriptSciAnalysisPerSessionQuest.m;exit;
+                                                      |
+{Invalid use of operator.
+} 
