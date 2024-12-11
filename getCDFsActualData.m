@@ -1,11 +1,11 @@
-function [actualDataCDFsOut] = getCDFsActualData(sessionInput, numFramesInput, actualDataActiveCellDistancesInput)
+function [actualDataCDFsOut] = getCDFsActualData(dirpath, sessionInput, numFramesInput, actualDataActiveCellDistancesInput)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
 %numFrames = 5000;  % Number of frames (columns in the tables)
 actualDataCDFsOut = cell(1, numFramesInput);
 
-cdfFileActualOut = strcat(sessionInput, '_', 'aggregated_cdfs_actual.mat');
+cdfFileActualOut = strcat(dirpath, sessionInput, '_', 'aggregated_cdfs_actual.mat');
 save(cdfFileActualOut, 'actualDataCDFsOut');  % Save an initial version
 
 parfor frameIdx = 1:numFramesInput

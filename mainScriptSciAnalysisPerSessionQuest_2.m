@@ -1,14 +1,18 @@
 %% set paths to e.g. single session data
+clusterProfile = parallel.defaultClusterProfile;
+cluster = parcluster(clusterProfile);
+cluster.JobStorageLocation = '/scratch/jma819/matlab_temp';
+maxNumCompThreads(str2num(getenv('SLURM_NPROCS')));
 addpath(genpath('spatial_clustering'));
 
-dir_path = '/scratch/jma819/CNMFE_filesForClusteringAnalysis/fenobam/'; 
-session = '20220801_f977_fen01';
+%dir_path = '/scratch/jma819/CNMFE_filesForClusteringAnalysis/fenobam/'; 
+%session = '20220801_f976_fen01';
 
-save_path = strcat('/scratch/jma819/CNMFE_filesForClusteringAnalysis/fenobam/', session); 
+%save_path = strcat('/scratch/jma819/CNMFE_filesForClusteringAnalysis/fenobam/', session); 
 
 
 %% analysis parameters
-micronsPerPixel = 2.5; %2.5 microns (inscopix), 1 (v3), 1.85 (v4)
+%micronsPerPixel = 2.5; %2.5 microns (inscopix), 1 (v3), 1.85 (v4)
 frameFileInput = 'all_frames';
 peakThreshold=2.5;
 maxDist = 500 ; 
@@ -72,7 +76,7 @@ end
 
 %% compute CDF on actual frame by frame data
 numFrames=length(within_frames_to_analyze_trimmed); 
-actualDataCDFs = getCDFsActualData(session, numFrames, actualDataActiveCellDistances);
+actualDataCDFs = getCDFsActualData(dir_path, session, numFrames, actualDataActiveCellDistances);
 
 %% aggregate active cell distances across shuffled data 
 matObjOutAggregatedDistances = aggregateShuffledDistances(dir_path, session, numFrames, allShuffledData);

@@ -18,7 +18,7 @@ echo $INPUT_dirPath
 #parameters for CNMF_E
 
 INPUT_session=$2
-INPUT_save_path='/scratch/jma819/CNMFE_filesForClusteringAnalysis/analysisOutput/'
+INPUT_save_path='/scratch/jma819/CNMFE_filesForClusteringAnalysis/SPRT/'
 INPUT_micronsPerPixel=2.5
 INPUT_parallel_enable=true
 
@@ -33,7 +33,7 @@ export PATH=$PATH/scratch/jma819/
 module load matlab/r2023b
 
 #run  
-matlab -nosplash -nodesktop -r "addpath(genpath('spatial_clustering'));dir_path='$INPUT_dirPath';session='$INPUT_session';save_path='$INPUT_save_path';micronsPerPixel=$INPUT_micronsPerPixel;disp(dir_path);disp(session);disp(save_path);run('mainScriptSciAnalysisPerSessionQuest.m');exit;"
+matlab -nosplash -nodesktop -r "cd('~/matlabSciMiniscopeAnalysis');addpath(genpath('spatial_clustering'));dir_path='$INPUT_dirPath';session='$INPUT_session';save_path='$INPUT_save_path';micronsPerPixel=$INPUT_micronsPerPixel;disp(dir_path);disp(session);disp(save_path);run('mainScriptSciAnalysisPerSessionQuest_2.m');exit;"
 
 
 
